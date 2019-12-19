@@ -21,21 +21,21 @@ resource "tls_private_key" "public_private_key_pair" {
 }
 
 resource "oci_core_instance" "personal_server_vm_instance" {
-  compartment_id        = "${var.compartment_ocid}"
-  availability_domain   = "${local.ad_1}"
+  compartment_id        = var.compartment_ocid
+  availability_domain   = local.ad_1
   shape                 = "VM.Standard.E2.1"
 
   source_details {
-    source_id     = "${local.oracle_linux}"
+    source_id     = local.oracle_linux
     source_type   = "image"
   }
   create_vnic_details {
-    subnet_id         = "${oci_core_subnet.personal_server_sn.id}"
+    subnet_id         = oci_core_subnet.personal_server_sn.id
     display_name      = "primary_vnic"
     assign_public_ip  = true
   }
   metadata = {
-    ssh_authorized_keys = "${tls_private_key.public_private_key_pair.public_key_openssh}"
+    ssh_authorized_keys = tls_private_key.public_private_key_pair.public_key_openssh
   }
   timeouts {
     create = "5m"
@@ -44,15 +44,15 @@ resource "oci_core_instance" "personal_server_vm_instance" {
 }
 
 resource "null_resource" "remote-exec" {
-  depends_on = ["oci_core_instance.personal_server_vm_instance"]
+  depends_on = [oci_core_instance.personal_server_vm_instance]
   
   provisioner "remote-exec" {
     connection {
       agent       = false
       timeout     = "30m"
-      host        = "${oci_core_instance.personal_server_vm_instance.public_ip}"
+      host        = oci_core_instance.personal_server_vm_instance.public_ip
       user        = "opc"
-      private_key = "${tls_private_key.public_private_key_pair.private_key_pem}"
+      private_key = tls_private_key.public_private_key_pair.private_key_pem
     }
   
     inline = [
